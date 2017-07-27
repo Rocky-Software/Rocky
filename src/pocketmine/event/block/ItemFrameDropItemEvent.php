@@ -7,9 +7,16 @@ use pocketmine\event\Cancellable;
 use pocketmine\item\Item;
 use pocketmine\Player;
 use pocketmine\tile\ItemFrame;
+use pocketmine\event\block\ItemFrameDropItemEvent;
 
 class ItemFrameDropItemEvent extends BlockEvent implements Cancellable {
 
+	public function onBreakItem(ItemFrameDropItemEvent $ev) {
+		if (!$ev->getPlayer()->isOp()) {
+			$ev->setCancelled();
+		}
+	}
+	
 	public static $handlerList = null;
 	/** @var  Block */
 	protected $block;
