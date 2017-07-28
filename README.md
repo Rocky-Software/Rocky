@@ -1,9 +1,9 @@
 # ![Rocky](http://i.imgur.com/hsukstv.jpg)
 ![Status](https://img.shields.io/badge/stability-alpha-ff69b4.svg)<br>
-![GitHub contributors](https://img.shields.io/github/contributors/RockySoftwareTeam/Rocky.svg)<br>
+![GitHub contributors](https://img.shields.io/github/contributors/Rocky-Softwrae/Rocky.svg)<br>
 ## Information
 
-- This is alpha software, you will experience bugs and crashes. You can see our progress [here](https://github.com/RockySoftware/Rocky/milestones)
+- This is alpha software, you will experience bugs and crashes. You can see our progress [here](https://github.com/Rocky-Software/Rocky/milestones)
 - You can make a pull-request if you want to help.
 - We currently are not accepting any more helpers
 - We are not Arufa, we are a replacment!
@@ -11,7 +11,7 @@
 
 ## Builds
 
-TravisCI: [![TravisCI](https://travis-ci.org/RockySoftwareTeam/Rocky.svg?branch=master)](https://travis-ci.org/RockySoftwareTeam/Rocky)<br>
+TravisCI: [![TravisCI](https://travis-ci.org/Rocky-Softwrae/Rocky.svg?branch=master)](https://travis-ci.org/RockySoftwareTeam/Rocky)<br>
 CircleCI: [![CircleCI](https://img.shields.io/circleci/project/github/RockySoftwareTeam/Rocky.svg?style=flat-square)](https://circleci.com/gh/RockySoftwareTeam/Rocky)<br>
 
 ## Installation
@@ -37,7 +37,7 @@ Supported platforms: Linux, Windows, OS X, Raspberry Pi, and ANDROID
 * __[Forums: Coming Soon](#)__
 * __[Gitter Chat: Coming Soon](#)__
 * __[Official Twitter Account: Coming Soon](#)__
-* __[Discord Chat: Coming Soon](#)__
+* __[Discord Chat](https://discord.gg/wJ3Fyam)__
 
 ## Planned Features
 - Little to no lag at all!
