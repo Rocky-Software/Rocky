@@ -19,13 +19,15 @@
  *
 */
 
+declare(strict_types=1);
+
 namespace pocketmine\utils;
 
 #include <rules/DataPacket.h>
 
 use pocketmine\item\Item;
 
-class BinaryStream extends \stdClass{
+class BinaryStream{
 
 	public $offset;
 	public $buffer;
@@ -71,11 +73,11 @@ class BinaryStream extends \stdClass{
 	}
 
 	public function getBool() : bool{
-		return (bool) $this->getByte();
+		return $this->get(1) !== "\x00";
 	}
 
 	public function putBool($v){
-		$this->putByte((bool) $v);
+		$this->buffer .= ($v ? "\x01" : "\x00");
 	}
 
 	public function getLong(){
@@ -126,8 +128,12 @@ class BinaryStream extends \stdClass{
 		$this->buffer .= Binary::writeShort($v);
 	}
 
-	public function getFloat(int $accuracy = -1){
-		return Binary::readFloat($this->get(4), $accuracy);
+	public function getFloat(){
+		return Binary::readFloat($this->get(4));
+	}
+
+	public function getRoundedFloat(int $accuracy){
+		return Binary::readRoundedFloat($this->get(4), $accuracy);
 	}
 
 	public function putFloat($v){
@@ -142,8 +148,12 @@ class BinaryStream extends \stdClass{
 		$this->buffer .= Binary::writeLShort($v);
 	}
 
-	public function getLFloat(int $accuracy = -1){
-		return Binary::readLFloat($this->get(4), $accuracy);
+	public function getLFloat(){
+		return Binary::readLFloat($this->get(4));
+	}
+
+	public function getRoundedLFloat(int $accuracy){
+		return Binary::readRoundedLFloat($this->get(4), $accuracy);
 	}
 
 	public function putLFloat($v){
@@ -194,12 +204,15 @@ class BinaryStream extends \stdClass{
 
 	public function getSlot(){
 		$id = $this->getVarInt();
-
 		if($id <= 0){
 			return Item::get(0, 0, 0);
 		}
+
 		$auxValue = $this->getVarInt();
 		$data = $auxValue >> 8;
+		if($data === 0x7fff){
+			$data = -1;
+		}
 		$cnt = $auxValue & 0xff;
 
 		$nbtLen = $this->getLShort();
@@ -209,12 +222,23 @@ class BinaryStream extends \stdClass{
 			$nbt = $this->get($nbtLen);
 		}
 
-		return Item::get(
-			$id,
-			$data,
-			$cnt,
-			$nbt
-		);
+		//TODO
+		$canPlaceOn = $this->getVarInt();
+		if($canPlaceOn > 0){
+			for($i = 0; $i < $canPlaceOn; ++$i){
+				$this->getString();
+			}
+		}
+
+		//TODO
+		$canDestroy = $this->getVarInt();
+		if($canDestroy > 0){
+			for($i = 0; $i < $canDestroy; ++$i){
+				$this->getString();
+			}
+		}
+
+		return Item::get($id, $data, $cnt, $nbt);
 	}
 
 
@@ -225,11 +249,15 @@ class BinaryStream extends \stdClass{
 		}
 
 		$this->putVarInt($item->getId());
-		$auxValue = (($item->getDamage() ?? -1) << 8) | $item->getCount();
+		$auxValue = (($item->getDamage() & 0x7fff) << 8) | $item->getCount();
 		$this->putVarInt($auxValue);
+
 		$nbt = $item->getCompoundTag();
 		$this->putLShort(strlen($nbt));
 		$this->put($nbt);
+
+		$this->putVarInt(0); //CanPlaceOn entry count (TODO)
+		$this->putVarInt(0); //CanDestroy entry count (TODO)
 	}
 
 	public function getString(){
@@ -246,7 +274,7 @@ class BinaryStream extends \stdClass{
 	 * @return int
 	 */
 	public function getUnsignedVarInt(){
-		return Binary::readUnsignedVarInt($this);
+		return Binary::readUnsignedVarInt($this->buffer, $this->offset);
 	}
 
 	/**
@@ -262,7 +290,7 @@ class BinaryStream extends \stdClass{
 	 * @return int
 	 */
 	public function getVarInt(){
-		return Binary::readVarInt($this);
+		return Binary::readVarInt($this->buffer, $this->offset);
 	}
 
 	/**
@@ -278,7 +306,7 @@ class BinaryStream extends \stdClass{
 	 * @return int|string int, or the string representation of an int64 on 32-bit platforms
 	 */
 	public function getUnsignedVarLong(){
-		return Binary::readUnsignedVarLong($this);
+		return Binary::readUnsignedVarLong($this->buffer, $this->offset);
 	}
 
 	/**
@@ -294,7 +322,7 @@ class BinaryStream extends \stdClass{
 	 * @return int|string int, or the string representation of an int64 on 32-bit platforms
 	 */
 	public function getVarLong(){
-		return Binary::readVarLong($this);
+		return Binary::readVarLong($this->buffer, $this->offset);
 	}
 
 	/**
