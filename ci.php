@@ -1,14 +1,29 @@
-test:
-  post:
-    - git submodule sync
-    - git submodule update --init
-    - rm -rf plugins
-    - rm -rf bin
-    - rm -rf artifacts
-    - mkdir plugins
-    - mkdir artifacts
-    - wget -O PHP7.tar.gz https://jenkins.pmmp.io/job/PHP-PocketMine-Linux-x86_64/lastSuccessfulBuild/artifact/PHP_Linux-x86_64.tar.gz --no-check-certificate
-    - tar -xf PHP7.tar.gz
-    - wget -O plugins/DevTools.phar https://github.com/pmmp/PocketMine-DevTools/releases/download/v1.11.3/DevTools_v1.11.3.phar
-    - bin/php7/bin/php ci.php
-    - cp -R plugins/DevTools/* $CIRCLE_ARTIFACTS
+<?php
+// import from clearsky/ci-test
+$time = time();
+$port = rand(1000,60000);
+while(system("lsof -i:".$port) != null){
+	$port = rand(1000,60000);
+}
+echo "port is ".$port.PHP_EOL;
+system("echo \"server-port=".$port."\" > server.properties");
+$server = proc_open(PHP_BINARY . " src/pocketmine/PocketMine.php --no-wizard --disable-readline", [
+	0 => ["pipe", "r"],
+	1 => ["pipe", "w"],
+	2 => ["pipe", "w"]
+], $pipes);
+fwrite($pipes[0], "version\nmakeserver\nstop\n\n");
+while(!feof($pipes[1]) and time()-$time<60*3){
+	echo fgets($pipes[1]);
+}
+fclose($pipes[0]);
+fclose($pipes[1]);
+fclose($pipes[2]);
+echo "\n\nReturn value: ". proc_close($server) ."\n";
+if(count(glob("plugins/DevTools/*.phar")) === 0){
+	echo "No server phar created!\n";
+	exit(1);
+}else{
+	echo "Server phar created!\n";
+	exit(0);
+}
