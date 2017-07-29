@@ -1,57 +1,139 @@
+<?php
 
-@echo off
-TITLE Rocky - a third-party build of PocketMine-MP and server software for Minecraft: Pocket Edition
-cd /d %~dp0
-netstat -o -n -a | findstr 0.0.0.0:19132>nul
-if %ERRORLEVEL% equ 0 (
-    echo Your server is running.
-    goto :loop
-) ELSE (
-    echo Starting your Rocky server.
-    goto :StartIM
-)
+/*
+ *
+ *  ____            _        _   __  __ _                  __  __ ____
+ * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \
+ * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
+ * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/
+ * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_|
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * @author PocketMine Team
+ * @link http://www.pocketmine.net/
+ *
+ *
+*/
+
+declare(strict_types=1);
+
+namespace pocketmine;
+
+use pocketmine\event\TranslationContainer;
+use pocketmine\utils\TextFormat;
+
+/**
+ * Handles the achievement list and a bit more
+ */
+abstract class Achievement{
+	/**
+	 * @var array[]
+	 */
+	public static $list = [
+		/*"openInventory" => array(
+			"name" => "Taking Inventory",
+			"requires" => [],
+		),*/
+		"mineWood" => [
+			"name" => "Getting Wood",
+			"requires" => [ //"openInventory",
+			],
+		],
+		"buildWorkBench" => [
+			"name" => "Benchmarking",
+			"requires" => [
+				"mineWood",
+			],
+		],
+		"buildPickaxe" => [
+			"name" => "Time to Mine!",
+			"requires" => [
+				"buildWorkBench",
+			],
+		],
+		"buildFurnace" => [
+			"name" => "Hot Topic",
+			"requires" => [
+				"buildPickaxe",
+			],
+		],
+		"acquireIron" => [
+			"name" => "Acquire hardware",
+			"requires" => [
+				"buildFurnace",
+			],
+		],
+		"buildHoe" => [
+			"name" => "Time to Farm!",
+			"requires" => [
+				"buildWorkBench",
+			],
+		],
+		"makeBread" => [
+			"name" => "Bake Bread",
+			"requires" => [
+				"buildHoe",
+			],
+		],
+		"bakeCake" => [
+			"name" => "The Lie",
+			"requires" => [
+				"buildHoe",
+			],
+		],
+		"buildBetterPickaxe" => [
+			"name" => "Getting an Upgrade",
+			"requires" => [
+				"buildPickaxe",
+			],
+		],
+		"buildSword" => [
+			"name" => "Time to Strike!",
+			"requires" => [
+				"buildWorkBench",
+			],
+		],
+		"diamonds" => [
+			"name" => "DIAMONDS!",
+			"requires" => [
+				"acquireIron",
+			],
+		],
+
+	];
 
 
-:loop
-echo Checking if server is online...
-PING 127.0.0.1 -n 10 >NUL
+	public static function broadcast(Player $player, $achievementId){
+		if(isset(Achievement::$list[$achievementId])){
+			$translation = new TranslationContainer("chat.type.achievement", [$player->getDisplayName(), TextFormat::GREEN . Achievement::$list[$achievementId]["name"] . TextFormat::RESET]);
+			if(Server::getInstance()->getConfigBoolean("announce-player-achievements", true) === true){
+				Server::getInstance()->broadcastMessage($translation);
+			}else{
+				$player->sendMessage($translation);
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
+	public static function add($achievementId, $achievementName, array $requires = []){
+		if(!isset(Achievement::$list[$achievementId])){
+			Achievement::$list[$achievementId] = [
+				"name" => $achievementName,
+				"requires" => $requires,
+			];
+
+			return true;
+		}
+
+		return false;
+	}
 
 
-netstat -o -n -a | findstr 0.0:19132>nul
-if %ERRORLEVEL% equ 0 (
-    echo Server is running.
-    goto :loop
-) ELSE (
-    echo Starting Rocky in 10 seconds...
-    PING 127.0.0.1 -n 10 >NUL
-    goto :StartIM
-)
-
-
-:StartIM
-if exist bin\php\php.exe (
-    set PHP_BINARY=bin\php\php.exe
-) else (
-    set PHP_BINARY=php
-)
-
-if exist ImagicalMine.phar (
-	set Rocky_FILE=Rocky.phar
-) else (
-	if exist PocketMine-MP.phar (
-		set IMAGICALMINE_FILE=PocketMine-MP.phar
-) else (
-	if exist src\pocketmine\PocketMine.php (
-		set IMAGICALMINE_FILE=src\pocketmine\PocketMine.php
-	) else (
-		echo "error> There was an error in starting ImagicalMine. Check that this is either a file named ImagicalMine.phar or PocketMine-MP.phar or a src folder, or try reinstalling Rocky."
-		pause
-		exit 7
-	)
-)
-if exist bin\mintty.exe (
-	start "" bin\mintty.exe -o Columns=88 -o Rows=32 -o AllowBlinking=0 -o FontQuality=3 -o Font="DejaVu Sans Mono" -o FontHeight=10 -o CursorType=0 -o CursorBlinks=1 -h error -t "Rocky" -i bin/imagicalmine.ico -w max %PHP_BINARY% %IMAGICALMINE_FILE% --enable-ansi %*
-) else (
-	%PHP_BINARY% -c bin\php %IMAGICALMINE_FILE% %*
-)
-goto :loop
+}
