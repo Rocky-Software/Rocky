@@ -19,29 +19,16 @@
  *
 */
 
-namespace pocketmine\level\particle;
+namespace pocketmine\level;
 
-use pocketmine\block\Block;
-use pocketmine\math\Vector3;
-use pocketmine\network\mcpe\protocol\LevelEventPacket;
 
-class DestroyBlockParticle extends Particle{
+class BlockLightUpdate extends LightUpdate{
 
-	protected $data;
-
-	public function __construct(Vector3 $pos, Block $b){
-		parent::__construct($pos->x, $pos->y, $pos->z);
-		$this->data = $b->getId() | ($b->getDamage() << 8);
+	public function getLight(int $x, int $y, int $z) : int{
+		return $this->level->getBlockLightAt($x, $y, $z);
 	}
 
-	public function encode(){
-		$pk = new LevelEventPacket;
-		$pk->evid = LevelEventPacket::EVENT_PARTICLE_DESTROY;
-		$pk->x = $this->x;
-		$pk->y = $this->y;
-		$pk->z = $this->z;
-		$pk->data = $this->data;
-
-		return $pk;
+	public function setLight(int $x, int $y, int $z, int $level){
+		$this->level->setBlockLightAt($x, $y, $z, $level);
 	}
 }
